@@ -9,7 +9,6 @@ import wikipedia
 from bs4 import BeautifulSoup
 from googletrans import Translator
 trans = Translator()
-session = {}
 load_dotenv(find_dotenv())
 token = os.getenv('token')
 bot = telebot.TeleBot(token, parse_mode='HTML')
@@ -17,7 +16,6 @@ wikipedia.set_lang('ru')
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chatID = message.from_user.id
-    session[chatID] = {'bot_message':None}
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = KeyboardButton('секретная функция')
     button2 = KeyboardButton('гифка')
