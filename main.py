@@ -1,6 +1,6 @@
 import os
 from random import randint
-
+import wikipedia
 import requests
 import telebot
 from bs4 import BeautifulSoup
@@ -9,14 +9,16 @@ from g4f.client import Client
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from generate_img_with_sber import gen_img
-
+from googletrans import Translator
+token='7263853249:AAGnGGc6-67NJ4x2vHhIUZlrs7g7XAl4p3o'
+trans = Translator()
 session = {}
 load_dotenv(find_dotenv())
 token = os.getenv('token')
 
 bot = telebot.TeleBot(token, parse_mode='HTML')
 
-
+wikipedia.set_lang('ru')
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -26,14 +28,15 @@ def send_welcome(message):
     button1 = KeyboardButton('фото')
     button2 = KeyboardButton('гифка')
     button3 = KeyboardButton('сгенерировать картинку')
-    btn4 = KeyboardButton('чат gpt')
+    btn4 = KeyboardButton('википедия')
     btn5 = KeyboardButton('погода')
     btn6 = KeyboardButton('словарь')
-    markup.row(button1,button2)
+    btn7 = KeyboardButton('чат gpt')
+    markup.row(btn7,btn6)
     markup.row(btn4, btn5)
-    markup.row(button3,btn6)
-    markup.add(button1, button2, button3,btn4,btn5)
-    bot.send_message(chatID,'меню кнопок', reply_markup=markup)
+    markup.row(button3)
+    bot.send_message(chatID,'привет 👋👋👋 я - бот информатор, я могу помочь найти информацию для 🫵вас🫵. Отправляйте запросы кратко, иначе будут ошибки')
+    bot.send_message(chatID, '👇👇👇выберите нужную функцию👇👇👇', reply_markup=markup)
 
 @bot.message_handler(func=lambda callback: True)
 def handle_callback(message):
@@ -54,15 +57,33 @@ def handle_callback(message):
                  3: 'SwiralTestav.gif',
                  4: '1442802_amni3d_3d-among-us-gifs.gif',
                  5: 'nasa-black-hole-visualization-1.gif'}
-        bot.send_photo(chatID, open('nasa-black-hole-visualization-1.gif', 'rb'))
+        bot.send_photo(chatID, open(list[rand], 'rb'))
     elif button_call == 'сгенерировать картинку':
         gen_image(message)
-    elif button_call == 'чат gpt':
-        gpt(message)
+    elif button_call == 'википедия':
+        wiki(message)
     elif button_call == 'погода':
         weather(message)
+    elif button_call == 'словарь':
+        word(message)
+    elif button_call == 'чат gpt':
+        gpt1(message)
     else:
         bot.send_message(chatID, 'кнопка в разработке')
+
+def wiki(message):
+    bot.send_message(message.chat.id, 'про что хотите найти информацию?')
+    bot.register_next_step_handler(message, wiki2)
+def wiki2(message):
+    wiki_page = wikipedia.page(message.text)
+    try:
+        print(wiki_page.html, wiki_page.summary)
+        bot.send_message(message.chat.id, wiki_page.summary)
+    except:
+        bot.send_message(message.chat.id, f'извините текст слишком большой, https://ru.wikipedia.org/wiki/{message.text}')
+
+
+
 
 @bot.message_handler(commands=['gen_img'])
 def gen_image(message):
@@ -78,11 +99,11 @@ def gen_img2(message):
 
 @bot.message_handler(commands=['gpt'])
 def gpt1(message):
-    chatID=message.from_user.id
+    chatID = message.from_user.id
     bot.send_message(chatID,'введите промт')
     bot.register_next_step_handler(message, gpt2)
 def gpt2(message):
-    bot.send_message(message.from_user.id, gpt(message.text))
+    bot.send_message(message.from_user.id, trans.translate(text=gpt(message.text),scr='auto',dest='ru').text)
 def gpt(query):
     client = Client()
     try:
